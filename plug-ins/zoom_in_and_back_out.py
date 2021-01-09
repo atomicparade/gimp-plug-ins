@@ -26,6 +26,8 @@ def zoom_in_and_back_out(
         message.run()
         return
 
+    pdb.gimp_image_undo_group_start(img)
+
     num_frames = int(num_frames)
 
     insert_at = img.layers.index(original_layer)
@@ -83,6 +85,8 @@ def zoom_in_and_back_out(
     if repeat_first_frame:
         layer = pdb.gimp_layer_new_from_drawable(original_layer, img)
         pdb.gimp_image_insert_layer(img, layer, None, insert_at)
+
+    pdb.gimp_image_undo_group_end(img)
 
 register(
     "zoom_in_and_back_out",

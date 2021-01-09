@@ -6,6 +6,8 @@ import gtk
 pdb = gimp.pdb
 
 def apply_this_layer_to_all_other_layers(img, layer_to_apply, apply_above, apply_as_mask):
+    pdb.gimp_image_undo_group_start(img)
+
     for i in range(0, len(img.layers)):
         layer = img.layers[i]
 
@@ -31,6 +33,8 @@ def apply_this_layer_to_all_other_layers(img, layer_to_apply, apply_above, apply
                 else:
                     pdb.gimp_image_insert_layer(img, applied_layer, None, i + 1)
                     pdb.gimp_image_merge_down(img, layer, CLIP_TO_IMAGE)
+
+    pdb.gimp_image_undo_group_end(img)
 
 register(
     "apply_this_layer_to_all_other_layers",

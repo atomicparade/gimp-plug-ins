@@ -9,9 +9,13 @@ def delete_all_other_layers(
     img,
     active_layer,
 ):
+    pdb.gimp_image_undo_group_start(img)
+
     for layer in img.layers:
         if layer != active_layer:
             pdb.gimp_image_remove_layer(img, layer)
+
+    pdb.gimp_image_undo_group_end(img)
 
 register(
     "delete_all_other_layers",
