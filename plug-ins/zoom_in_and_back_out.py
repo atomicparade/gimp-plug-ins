@@ -11,6 +11,7 @@ def zoom_in_and_back_out(
     num_frames,
     repeat_first_frame,
     ease_in,
+    use_existing_layers,
 ):
     (selection_is_empty, x1, y1, x2, y2) = pdb.gimp_selection_bounds(img)
 
@@ -26,11 +27,17 @@ def zoom_in_and_back_out(
         message.run()
         return
 
-    pdb.gimp_image_undo_group_start(img)
-
     num_frames = int(num_frames)
-
     insert_at = img.layers.index(original_layer)
+
+    if use_existing_layers:
+        if (insert_at + 1) < num_frames: # + 1 because the first layer counts
+            message = gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK)
+            message.set_markup("Not enough layers exist to zoom in on")
+            message.run()
+            return
+
+    pdb.gimp_image_undo_group_start(img)
 
     # Calculate widths, heights, and offsets
     width = [0] * num_frames
@@ -65,8 +72,12 @@ def zoom_in_and_back_out(
             y_offset[num_frames - i] = -top
 
     for i in range(1, num_frames): # Active layer counts as the first layer
-        layer = pdb.gimp_layer_new_from_drawable(original_layer, img)
-        pdb.gimp_image_insert_layer(img, layer, None, insert_at)
+        if use_existing_layers:
+            layer = img.layers[insert_at]
+            insert_at -= 1
+        else:
+            layer = pdb.gimp_layer_new_from_drawable(original_layer, img)
+            pdb.gimp_image_insert_layer(img, layer, None, insert_at)
 
         # Crop
         pdb.gimp_layer_resize(layer, width[i], height[i], x_offset[i], y_offset[i])
@@ -101,6 +112,7 @@ register(
         (PF_SPINNER,    "num_frames",           "Total number of frames (must be an even number)",  8,      (2, 1000, 1)    ),
         (PF_TOGGLE,     "repeat_first_frame",   "Repeat first frame at the end",                    False                   ),
         (PF_TOGGLE,     "ease_in",              "Ease in",                                          True                    ),
+        (PF_TOGGLE,     "use_existing_layers",  "Use existing layers",                              False                   ),
     ],
     [],
     zoom_in_and_back_out,
