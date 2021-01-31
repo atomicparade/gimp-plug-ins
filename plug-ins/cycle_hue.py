@@ -7,19 +7,24 @@ pdb = gimp.pdb
 
 def cycle_hue(
     img,
-    original_layer,
+    active_layer,
     num_frames,
     use_existing_layers,
 ):
-    num_frames = int(num_frames)
-    insert_at = img.layers.index(original_layer)
 
     if use_existing_layers:
-        if (insert_at + 1) < num_frames: # + 1 because the first layer counts
+        num_frames = len(img.layers)
+
+        if num_frames < 2:
             message = gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK)
-            message.set_markup("There are less layers than frames")
+            message.set_markup("There must be at least two layers")
             message.run()
             return
+
+        insert_at = len(img.layers) - 2
+    else:
+        num_frames = int(num_frames)
+        insert_at = img.layers.index(active_layer)
 
     pdb.gimp_image_undo_group_start(img)
 
@@ -28,7 +33,7 @@ def cycle_hue(
             layer = img.layers[insert_at]
             insert_at -= 1
         else:
-            layer = pdb.gimp_layer_new_from_drawable(original_layer, img)
+            layer = pdb.gimp_layer_new_from_drawable(active_layer, img)
             pdb.gimp_image_insert_layer(img, layer, None, insert_at)
 
         hue_adjustment = ((i * 1.0) / num_frames) * 360
@@ -58,8 +63,8 @@ register(
     "<Image>/Filters/Animation/Cycle hue",
     "*",
     [
-        (PF_SPINNER,    "num_frames",           "Total number of frames",   8,      (2, 1000, 1)    ),
-        (PF_TOGGLE,     "use_existing_layers",  "Use existing layers",      False                   ),
+        (PF_SPINNER,    "num_frames",           "Total number of frames",                                                           8,      (2, 1000, 1)    ),
+        (PF_TOGGLE,     "use_existing_layers",  "Use existing layers (enabling this causes total number of frames to be ignored)",  False                   ),
     ],
     [],
     cycle_hue,
