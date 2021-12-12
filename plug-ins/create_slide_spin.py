@@ -177,7 +177,7 @@ def create_slide_spin(
     pdb.gimp_image_delete(mask_img)
 
 register(
-    "slide_spin",
+    "create_slide_spin",
     "Create slide-spin",
     "Create slide-spin",
     "atomicparade",
